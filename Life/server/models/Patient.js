@@ -30,10 +30,11 @@ const patientSchema = new mongoose.Schema({
     required: true,
   },
   urgency: {
-    type: String,
-    enum: ['High', 'Medium', 'Low'],
-    default: 'Medium',
-  },
+  type: String,
+  enum: ['Critical', 'High', 'Medium', 'Low'], // ✅ Add Critical
+  default: 'Medium'
+}
+,
   // Optional: organNeeded: { type: String, enum: ['Kidney', 'Liver', 'Heart', 'None'], default: 'None' }
 }, {
   timestamps: true,
