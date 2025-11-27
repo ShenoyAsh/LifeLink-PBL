@@ -10,5 +10,6 @@ router.get('/donors', getDonors);
 // @desc    Manually verify a donor (Admin action)
 // TODO: Protect this with admin JWT middleware
 router.post('/admin/verify-donor/:id', manualVerifyDonor);
+router.get('/profile/:email', getDonorProfile);
 
 module.exports = router;

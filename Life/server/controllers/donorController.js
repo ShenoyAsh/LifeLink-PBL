@@ -38,8 +38,36 @@ const manualVerifyDonor = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 }
+const getDonorProfile = async (req, res) => {
+  try {
+    const { email } = req.params;
+    const donor = await Donor.findOne({ email });
+
+    if (!donor) {
+      return res.status(404).json({ message: 'Donor not found' });
+    }
+
+    // Return only necessary public/gamification data
+    const profile = {
+      name: donor.name,
+      bloodType: donor.bloodType,
+      location: donor.location.name,
+      points: donor.points || 0,
+      donationCount: donor.donationCount || 0,
+      badges: donor.badges || [],
+      availability: donor.availability,
+      joinedAt: donor.createdAt
+    };
+
+    res.status(200).json(profile);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
 
 module.exports = {
   getDonors,
-  manualVerifyDonor
+  manualVerifyDonor,
+  getDonorProfile
 };

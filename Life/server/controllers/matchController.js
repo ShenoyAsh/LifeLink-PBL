@@ -1,10 +1,9 @@
 const Patient = require('../models/Patient');
 const Donor = require('../models/Donor');
+const DonationRequest = require('../models/DonationRequest'); // Import new model
 const { sendAlertEmail } = require('../utils/emailHelper');
 
 // --- Blood Type Compatibility Matrix ---
-// Key: Patient's Blood Type
-// Value: Array of compatible DONOR blood types
 const compatibilityMatrix = {
   'A+': ['A+', 'A-', 'O+', 'O-'],
   'A-': ['A-', 'O-'],
@@ -13,7 +12,7 @@ const compatibilityMatrix = {
   'AB+': ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'], // Universal Recipient
   'AB-': ['A-', 'B-', 'AB-', 'O-'],
   'O+': ['O+', 'O-'],
-  'O-': ['O-'], // Universal Donor (but can only receive O-)
+  'O-': ['O-'], // Universal Donor
 };
 
 /**
@@ -52,10 +51,9 @@ const findMatch = async (req, res) => {
             type: 'Point',
             coordinates: patientCoords,
           },
-          distanceField: 'distanceMeters', // Output field with distance in meters
+          distanceField: 'distanceMeters', 
           maxDistance: radiusMeters,
           spherical: true,
-          // Query filters are applied *before* geoNear
           query: {
             bloodType: { $in: compatibleTypes },
             verified: true,
@@ -65,11 +63,9 @@ const findMatch = async (req, res) => {
         },
       },
       {
-        // Sort by distance (nearest first)
         $sort: { distanceMeters: 1 },
       },
       {
-        // Project to shape the output
         $project: {
           _id: 1,
           name: 1,
@@ -78,8 +74,9 @@ const findMatch = async (req, res) => {
           bloodType: 1,
           location: 1,
           availability: 1,
-          distanceKm: { $divide: ['$distanceMeters', 1000] }, // Convert to KM
-          // Exclude sensitive fields
+          badges: 1, // Include badges in output
+          points: 1, // Include points in output
+          distanceKm: { $divide: ['$distanceMeters', 1000] }, 
         },
       },
     ]);
@@ -93,7 +90,7 @@ const findMatch = async (req, res) => {
 };
 
 /**
- * Send an alert to a matched donor
+ * Send an alert to a matched donor and track the request
  */
 const sendAlert = async (req, res) => {
   const { donorId, patientId } = req.body;
@@ -109,18 +106,22 @@ const sendAlert = async (req, res) => {
     // --- 1. Send Email Alert ---
     const emailSent = await sendAlertEmail(donor, patient);
 
-    // --- 2. Simulate SMS Alert (Log only) ---
+    // --- 2. Simulate SMS ---
     console.log(`--- SIMULATED SMS PAYLOAD ---`);
     console.log(`TO: ${donor.phone}`);
-    console.log(`BODY: URGENT: LifeLink match for patient ${patient.name} (${patient.bloodType}) near you. Check email for details.`);
+    console.log(`BODY: URGENT: LifeLink match for patient ${patient.name}.`);
     console.log(`-------------------------------`);
-    
-    // --- 3. Log alert in Excel (Optional - complex operation) ---
-    // We could create a third 'Alerts' sheet and append to it.
-    // appendToAlertsSheet({ donorId, patientId, time: new Date() });
 
     if (emailSent) {
-      res.status(200).json({ message: 'Alert sent successfully' });
+      // --- 3. Track the Request (Closed Loop Logic) ---
+      const newRequest = new DonationRequest({
+        patientId: patient._id,
+        donorId: donor._id,
+        status: 'Pending'
+      });
+      await newRequest.save();
+
+      res.status(200).json({ message: 'Alert sent and request tracked successfully' });
     } else {
       res.status(500).json({ message: 'Failed to send alert email' });
     }

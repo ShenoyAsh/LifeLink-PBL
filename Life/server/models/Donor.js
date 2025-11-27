@@ -34,7 +34,13 @@ const donorSchema = new mongoose.Schema({
   otpExpires: { type: Date },
   otpVerified: { type: Boolean, default: false },
   availability: { type: Boolean, default: true },
-  // Optional: organ: { type: String, enum: ['Kidney', 'Liver', 'Heart', 'None'], default: 'None' }
+  
+  // --- Gamification & History Fields ---
+  points: { type: Number, default: 0 },
+  donationCount: { type: Number, default: 0 },
+  badges: [{ type: String }], // e.g., ["First Saver", "LifeLink Hero"]
+  lastDonationDate: { type: Date },
+  
 }, {
   timestamps: true,
 });

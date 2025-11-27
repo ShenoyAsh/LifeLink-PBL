@@ -7,12 +7,14 @@ const patientRoutes = require('./patientRoutes');
 const matchRoutes = require('./matchRoutes');
 const excelRoutes = require('./excelRoutes');
 const emergencyRequestRoutes = require('./emergencyRequestRoutes');
+const requestRoutes = require('./requestRoutes');
 
 router.use(authRoutes);
 router.use(donorRoutes);
 router.use(patientRoutes);
 router.use(matchRoutes);
 router.use(excelRoutes);
+router.use(requestRoutes);
 router.use(emergencyRequestRoutes);
 
 router.get('/health', (req, res) => {
