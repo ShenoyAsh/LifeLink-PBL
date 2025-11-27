@@ -14,6 +14,9 @@ export default function Header() {
           <Link to="/find-match" className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary-green">
             Find Donor
           </Link>
+          <Link to="/emergency-request" className="text-sm font-semibold leading-6 text-red-600 hover:text-red-800">
+            Need Blood
+          </Link>
           <Link to="/register-donor" className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary-green">
             Register
           </Link>
