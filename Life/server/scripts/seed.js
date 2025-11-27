@@ -106,6 +106,7 @@ const sampleDonors = [
     otpVerified: true,
     availability: true,
   },
+  
 ];
 
 const samplePatients = [
@@ -158,6 +159,7 @@ const samplePatients = [
     location: { name: 'Park Street, Kolkata', type: 'Point', coordinates: [88.3510, 22.5532] },
   },
 ];
+
 
 
 const seedDB = async () => {
