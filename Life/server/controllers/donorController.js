@@ -1,53 +1,105 @@
 const Donor = require('../models/Donor');
+const { sendOTPEmail } = require('../utils/emailHelper');
 
-/**
- * Get all donors
- */
-const getDonors = async (req, res) => {
+// --- Register Donor ---
+const registerDonor = async (req, res) => {
+  const { name, email, phone, bloodType, location, availability } = req.body;
+
   try {
-    // TODO: Add filters (e.g., ?verified=true)
-    const donors = await Donor.find().sort({ createdAt: -1 });
-    res.status(200).json(donors);
+    // Force email to lowercase to ensure consistency
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Check if donor already exists
+    let donor = await Donor.findOne({ email: normalizedEmail });
+    if (donor) {
+      return res.status(400).json({ message: 'Donor already exists with this email' });
+    }
+
+    // Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    // Create new donor
+    donor = new Donor({
+      name,
+      email: normalizedEmail,
+      phone,
+      bloodType,
+      location,
+      availability,
+      otp,
+      otpExpires,
+      verified: false, // Not verified until OTP is checked
+    });
+
+    await donor.save();
+
+    // Send OTP Email
+    await sendOTPEmail(normalizedEmail, otp);
+
+    res.status(201).json({ message: 'Donor registered. Please verify OTP sent to your email.' });
   } catch (error) {
-    console.error('Error fetching donors:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Register Error:', error);
+    res.status(500).json({ message: 'Server error during registration' });
   }
 };
 
-/**
- * Manually verify a donor (Admin)
- */
-const manualVerifyDonor = async (req, res) => {
-    const { id } = req.params;
-    try {
-        const donor = await Donor.findById(id);
-        if (!donor) {
-            return res.status(404).json({ message: 'Donor not found' });
-        }
-        
-        donor.verified = true;
-        donor.otpVerified = true; // Assume manual verify also bypasses OTP
-        await donor.save();
+// --- Verify OTP ---
+const verifyOTP = async (req, res) => {
+  const { email, otp } = req.body;
 
-        // TODO: Update Excel file "verified" status (complex read-modify-write)
-        
-        res.status(200).json({ message: 'Donor manually verified', donor });
-
-    } catch (error) {
-        console.error('Manual verify error:', error);
-        res.status(500).json({ message: 'Server error' });
-    }
-}
-const getDonorProfile = async (req, res) => {
   try {
-    const { email } = req.params;
-    const donor = await Donor.findOne({ email });
+    const normalizedEmail = email.toLowerCase().trim();
+    const donor = await Donor.findOne({ email: normalizedEmail });
 
     if (!donor) {
       return res.status(404).json({ message: 'Donor not found' });
     }
 
-    // Return only necessary public/gamification data
+    if (donor.otp !== otp) {
+      return res.status(400).json({ message: 'Invalid OTP' });
+    }
+
+    if (donor.otpExpires < Date.now()) {
+      return res.status(400).json({ message: 'OTP expired. Please register again.' });
+    }
+
+    // Verify the donor
+    donor.verified = true;
+    donor.otpVerified = true;
+    donor.otp = undefined; // Clear OTP
+    donor.otpExpires = undefined;
+    
+    // Initialize gamification stats if they don't exist
+    if (donor.points === undefined) donor.points = 0;
+    if (donor.donationCount === undefined) donor.donationCount = 0;
+    if (!donor.badges) donor.badges = [];
+
+    await donor.save();
+
+    res.status(200).json({ message: 'Email verified successfully! You are now a registered donor.' });
+  } catch (error) {
+    console.error('OTP Verify Error:', error);
+    res.status(500).json({ message: 'Server error verifying OTP' });
+  }
+};
+
+// --- Get Donor Profile (Fix for "Donor Not Found") ---
+const getDonorProfile = async (req, res) => {
+  try {
+    const { email } = req.params;
+    
+    // CRITICAL FIX: Normalize the email to lowercase before searching
+    // This ensures 'User@Example.com' finds 'user@example.com'
+    const normalizedEmail = email.toLowerCase().trim();
+    
+    const donor = await Donor.findOne({ email: normalizedEmail });
+
+    if (!donor) {
+      return res.status(404).json({ message: 'Donor not found. Please check the email or register.' });
+    }
+
+    // Return profile data
     const profile = {
       name: donor.name,
       bloodType: donor.bloodType,
@@ -61,13 +113,13 @@ const getDonorProfile = async (req, res) => {
 
     res.status(200).json(profile);
   } catch (error) {
-    console.error(error);
+    console.error('Get Profile Error:', error);
     res.status(500).json({ message: 'Server Error' });
   }
 };
 
 module.exports = {
-  getDonors,
-  manualVerifyDonor,
-  getDonorProfile
+  registerDonor,
+  verifyOTP,
+  getDonorProfile,
 };

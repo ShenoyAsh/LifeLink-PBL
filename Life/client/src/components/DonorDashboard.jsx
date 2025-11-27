@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Award, Droplet, Star, Shield, Zap, Calendar } from 'lucide-react';
+import { Search, Award, Droplet, Star, Shield, Zap } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 // Badge Configuration (Visuals)
@@ -15,26 +15,41 @@ export default function DonorDashboard() {
   const [email, setEmail] = useState('');
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
 
-  const handleSearch = async (e) => {
+ const handleSearch = async (e) => {
     e.preventDefault();
     if (!email) return;
     
+    // Remove whitespace to prevent errors
+    const cleanEmail = email.trim().toLowerCase();
+
     setLoading(true);
     try {
-      // Use the environment variable or default localhost
       const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
-      const res = await fetch(`${API_URL}/api/donors/profile/${email}`);
       
-      if (!res.ok) throw new Error('Donor not found');
+      // 1. Make the request
+      const res = await fetch(`${API_URL}/api/donors/profile/${encodeURIComponent(cleanEmail)}`);
       
+      // 2. Check Content-Type BEFORE parsing
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        // If we get HTML back, the route doesn't exist or server crashed
+        const text = await res.text(); 
+        console.error("Server returned non-JSON:", text);
+        throw new Error("Server Error: API endpoint not found. Please check backend logs.");
+      }
+
       const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || 'Donor not found');
+      }
+      
       setProfile(data);
-      setHasSearched(true);
       toast.success(`Welcome back, ${data.name}!`);
     } catch (err) {
-      toast.error('No donor found with this email.');
+      console.error("Search Error:", err);
+      toast.error(err.message);
       setProfile(null);
     } finally {
       setLoading(false);
@@ -91,11 +106,11 @@ export default function DonorDashboard() {
               <div className="bg-gradient-to-r from-primary-green to-emerald-600 h-32"></div>
               <div className="px-8 pb-8 relative">
                 <div className="absolute -top-12 left-8 h-24 w-24 bg-white rounded-full p-2 shadow-lg">
-                  <div className="h-full w-full bg-gray-100 rounded-full flex items-center justify-center text-2xl font-bold text-gray-400">
+                  <div className="h-full w-full bg-gray-100 rounded-full flex items-center justify-center text-2xl font-bold text-gray-400 uppercase">
                     {profile.name.charAt(0)}
                   </div>
                 </div>
-                <div className="pt-14 flex justify-between items-end">
+                <div className="pt-14 flex justify-between items-end flex-wrap">
                   <div>
                     <h1 className="text-3xl font-bold text-gray-900">{profile.name}</h1>
                     <p className="text-gray-500 flex items-center mt-1">
@@ -103,7 +118,7 @@ export default function DonorDashboard() {
                        • {profile.location}
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right mt-4 sm:mt-0">
                     <p className="text-sm text-gray-500">Joined</p>
                     <p className="font-medium">{new Date(profile.joinedAt).toLocaleDateString()}</p>
                   </div>
