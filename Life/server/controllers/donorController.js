@@ -85,6 +85,49 @@ const verifyOTP = async (req, res) => {
 };
 
 // --- Get Donor Profile (Fix for "Donor Not Found") ---
+// --- Get All Donors (with pagination) ---
+const getDonors = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Build query
+    const query = {};
+    if (req.query.bloodType) {
+      query.bloodType = req.query.bloodType;
+    }
+    if (req.query.available === 'true') {
+      query.availability = true;
+    }
+    if (req.query.verified === 'true') {
+      query.verified = true;
+    }
+
+    const [donors, total] = await Promise.all([
+      Donor.find(query)
+        .select('-otp -otpExpires -__v') // Exclude sensitive/irrelevant fields
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Donor.countDocuments(query)
+    ]);
+
+    res.status(200).json({
+      success: true,
+      count: donors.length,
+      total,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+      data: donors
+    });
+  } catch (error) {
+    console.error('Get Donors Error:', error);
+    res.status(500).json({ success: false, message: 'Server error fetching donors' });
+  }
+};
+
+// --- Get Donor Profile ---
 const getDonorProfile = async (req, res) => {
   try {
     const { email } = req.params;
@@ -118,8 +161,44 @@ const getDonorProfile = async (req, res) => {
   }
 };
 
+// --- Manual Donor Verification (Admin) ---
+const manualVerifyDonor = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const donor = await Donor.findById(id);
+    if (!donor) {
+      return res.status(404).json({ success: false, message: 'Donor not found' });
+    }
+
+    // Update verification status
+    donor.verified = true;
+    donor.otpVerified = true; // Mark as verified
+    donor.otp = undefined;
+    donor.otpExpires = undefined;
+    
+    await donor.save();
+
+    res.status(200).json({ 
+      success: true, 
+      message: 'Donor verified successfully',
+      data: {
+        id: donor._id,
+        name: donor.name,
+        email: donor.email,
+        verified: donor.verified
+      }
+    });
+  } catch (error) {
+    console.error('Manual Verify Error:', error);
+    res.status(500).json({ success: false, message: 'Server error during manual verification' });
+  }
+};
+
 module.exports = {
   registerDonor,
   verifyOTP,
   getDonorProfile,
+  getDonors,
+  manualVerifyDonor
 };
