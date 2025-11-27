@@ -1,6 +1,6 @@
 const Patient = require('../models/Patient');
 const Donor = require('../models/Donor');
-const DonationRequest = require('../models/DonationRequest'); // Import new model
+const DonationRequest = require('../models/DonationRequest');
 const { sendAlertEmail } = require('../utils/emailHelper');
 
 // --- Blood Type Compatibility Matrix ---
@@ -9,17 +9,17 @@ const compatibilityMatrix = {
   'A-': ['A-', 'O-'],
   'B+': ['B+', 'B-', 'O+', 'O-'],
   'B-': ['B-', 'O-'],
-  'AB+': ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'], // Universal Recipient
+  'AB+': ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
   'AB-': ['A-', 'B-', 'AB-', 'O-'],
   'O+': ['O+', 'O-'],
-  'O-': ['O-'], // Universal Donor
+  'O-': ['O-'],
 };
 
 /**
- * Find compatible donors
+ * Find compatible donors with filters
  */
 const findMatch = async (req, res) => {
-  const { patientId, radiusKm } = req.query;
+  const { patientId, radiusKm, name, bloodType } = req.query;
 
   if (!patientId) {
     return res.status(400).json({ message: 'Patient ID is required' });
@@ -41,9 +41,32 @@ const findMatch = async (req, res) => {
     }
     
     // 3. Get Patient's coordinates
-    const patientCoords = patient.location.coordinates; // [lng, lat]
+    const patientCoords = patient.location.coordinates;
 
-    // 4. Run Geospatial Aggregation
+    // 4. Build Dynamic Query
+    let matchQuery = {
+      bloodType: { $in: compatibleTypes },
+      verified: true,
+      otpVerified: true,
+      availability: true,
+    };
+
+    // Apply Name Filter (Case-insensitive regex)
+    if (name) {
+      matchQuery.name = { $regex: name, $options: 'i' };
+    }
+
+    // Apply Specific Blood Type Filter (must still be compatible)
+    if (bloodType) {
+      if (compatibleTypes.includes(bloodType)) {
+        matchQuery.bloodType = bloodType;
+      } else {
+        // If filtered type is incompatible, return empty immediately
+        return res.status(200).json([]); 
+      }
+    }
+
+    // 5. Run Geospatial Aggregation
     const matches = await Donor.aggregate([
       {
         $geoNear: {
@@ -52,14 +75,9 @@ const findMatch = async (req, res) => {
             coordinates: patientCoords,
           },
           distanceField: 'distanceMeters', 
-          maxDistance: radiusMeters,
+          maxDistance: parseFloat(radiusMeters),
           spherical: true,
-          query: {
-            bloodType: { $in: compatibleTypes },
-            verified: true,
-            otpVerified: true,
-            availability: true,
-          },
+          query: matchQuery, // Injected dynamic query
         },
       },
       {
@@ -74,8 +92,8 @@ const findMatch = async (req, res) => {
           bloodType: 1,
           location: 1,
           availability: 1,
-          badges: 1, // Include badges in output
-          points: 1, // Include points in output
+          badges: 1,
+          points: 1,
           distanceKm: { $divide: ['$distanceMeters', 1000] }, 
         },
       },
@@ -89,11 +107,10 @@ const findMatch = async (req, res) => {
   }
 };
 
-/**
- * Send an alert to a matched donor and track the request
- */
+// ... rest of the file (sendAlert) remains the same
 const sendAlert = async (req, res) => {
-  const { donorId, patientId } = req.body;
+  // ... existing sendAlert code ...
+    const { donorId, patientId } = req.body;
 
   try {
     const donor = await Donor.findById(donorId);
