@@ -3,10 +3,109 @@ const { validatePhone, validateEmail } = require('../utils/validate');
 const { generateOTP, getOTPExpiry } = require('../utils/otpHelper');
 const { sendOTPEmail } = require('../utils/emailHelper');
 const { appendDonorToExcel } = require('../utils/excelHelper');
-// const bcrypt = require('bcrypt'); // Ready for hashing OTP if needed
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
+// Generate JWT
+const generateToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: '30d',
+  });
+};
 
 /**
- * Register a new donor
+ * @desc    Register a new user (Standard)
+ * @route   POST /api/auth/register
+ */
+const register = async (req, res) => {
+  const { name, email, password } = req.body;
+
+  if (!name || !email || !password) {
+    return res.status(400).json({ message: 'Please add all fields' });
+  }
+
+  try {
+    // Check if user exists
+    const userExists = await Donor.findOne({ email });
+
+    if (userExists) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create user
+    const user = await Donor.create({
+      name,
+      email,
+      password: hashedPassword,
+      // Initialize required location with defaults to pass validation if needed, 
+      // though we made it optional in schema, good to be safe if accessed via geo queries
+      location: { type: 'Point', coordinates: [0, 0], name: 'Unknown' }
+    });
+
+    if (user) {
+      res.status(201).json({
+        token: generateToken(user._id),
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+        },
+      });
+    } else {
+      res.status(400).json({ message: 'Invalid user data' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error during registration' });
+  }
+};
+
+/**
+ * @desc    Authenticate a user
+ * @route   POST /api/auth/login
+ */
+const login = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await Donor.findOne({ email }).select('+password');
+
+    if (user && (await bcrypt.compare(password, user.password))) {
+      res.json({
+        token: generateToken(user._id),
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          bloodType: user.bloodType,
+        },
+      });
+    } else {
+      res.status(400).json({ message: 'Invalid credentials' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error during login' });
+  }
+};
+
+/**
+ * @desc    Get user data
+ * @route   GET /api/auth/me
+ */
+const getMe = async (req, res) => {
+  res.status(200).json(req.user);
+};
+
+// --- EXISTING FUNCTIONS ---
+
+/**
+ * Register a new donor (Specific Flow with OTP)
  */
 const registerDonor = async (req, res) => {
   const { name, email, phone, bloodType, locationName, lat, lng, availability } = req.body;
@@ -32,8 +131,7 @@ const registerDonor = async (req, res) => {
     // --- 2. OTP Generation ---
     const otp = generateOTP();
     const otpExpires = getOTPExpiry();
-    // const hashedOTP = await bcrypt.hash(otp, 10); // Use this for production
-
+    
     // --- 3. Create Donor in MongoDB ---
     const newDonor = new Donor({
       name,
@@ -46,14 +144,13 @@ const registerDonor = async (req, res) => {
         name: locationName,
       },
       availability: availability ?? true,
-      otp: otp, // Store plain OTP for prototype. Use hashedOTP in production.
+      otp: otp, 
       otpExpires,
     });
     
     await newDonor.save();
 
     // --- 4. Sync to Excel (Atomic Append) ---
-    // This happens *after* successful Mongo save
     appendDonorToExcel(newDonor);
 
     // --- 5. Send OTP Email ---
@@ -95,34 +192,22 @@ const verifyDonorOTP = async (req, res) => {
       return res.status(400).json({ message: 'Donor already verified' });
     }
 
-    // Check OTP expiry
     if (donor.otpExpires < new Date()) {
       return res.status(400).json({ message: 'OTP has expired' });
     }
 
-    // --- OTP Verification ---
-    // Plain text check (prototype)
     const isMatch = donor.otp === otp;
-    
-    // Hashed check (production)
-    // const isMatch = await bcrypt.compare(otp, donor.otp);
 
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid OTP' });
     }
 
-    // --- Success ---
     donor.otpVerified = true;
-    donor.verified = true; // Auto-verify on OTP success for this flow
-    donor.otp = undefined; // Clear OTP
+    donor.verified = true; 
+    donor.otp = undefined; 
     donor.otpExpires = undefined;
     
     await donor.save();
-
-    // TODO: We should also update the "verified" status in the Excel file.
-    // This requires a read-modify-write operation on the Excel file,
-    // which is more complex than simple appends.
-    // For now, Mongo is the source of truth for verification status.
 
     res.status(200).json({ message: 'Donor verified successfully' });
 
@@ -133,6 +218,9 @@ const verifyDonorOTP = async (req, res) => {
 };
 
 module.exports = {
+  register,
+  login,
+  getMe,
   registerDonor,
   verifyDonorOTP,
 };

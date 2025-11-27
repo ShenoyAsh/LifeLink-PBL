@@ -4,30 +4,28 @@ const locationSchema = new mongoose.Schema({
   type: {
     type: String,
     enum: ['Point'],
-    required: true,
+    default: 'Point',
   },
   coordinates: {
     type: [Number], // [longitude, latitude]
-    required: true,
+    default: [0, 0],
   },
   name: {
-    type: String, // e.g., "Indiranagar, Bengaluru"
-    required: true,
+    type: String, 
   },
 });
 
 const donorSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true, lowercase: true },
-  phone: { type: String, required: true, unique: true },
+  password: { type: String, select: false }, // Added password field
+  phone: { type: String, unique: true, sparse: true }, // Made optional & sparse (allows nulls)
   bloodType: { 
     type: String, 
-    required: true,
     enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
   },
   location: {
     type: locationSchema,
-    required: true,
   },
   verified: { type: Boolean, default: false },
   otp: { type: String },
@@ -35,19 +33,11 @@ const donorSchema = new mongoose.Schema({
   otpVerified: { type: Boolean, default: false },
   availability: { type: Boolean, default: true },
   
-  // --- Enhanced Gamification & Tracking ---
-  points: { 
-    type: Number, 
-    default: 0,
-    min: 0
-  },
-  donationCount: { 
-    type: Number, 
-    default: 0,
-    min: 0 
-  },
+  // --- Gamification & Tracking ---
+  points: { type: Number, default: 0, min: 0 },
+  donationCount: { type: Number, default: 0, min: 0 },
   badges: [{ 
-    name: { type: String, required: true },
+    name: { type: String },
     description: String,
     earnedOn: { type: Date, default: Date.now },
     icon: String
