@@ -1,49 +1,43 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
-import HomePage from './pages/HomePage';
+import Hero from './components/Hero';
+import FeatureCards from './components/FeatureCards';
+import StatsSection from './components/StatsSection';
 import RegisterDonor from './components/RegisterDonor';
+import AdminDashboard from './components/AdminDashboard';
+import FindMatch from './components/FindMatch';
 import EmergencyRequestForm from './components/EmergencyRequestForm';
-import FindMatch from './pages/FindMatch';
-import AdminDashboard from './pages/AdminDashboard';
-import EmergencyDashboard from './pages/EmergencyDashboard';
-import DonorDashboard from './pages/DonorDashboard';
-import LoginForm from './components/auth/LoginForm';
-import RegisterForm from './components/auth/RegisterForm';
-import PrivateRoute from './components/PrivateRoute';
-import Dashboard from './pages/Dashboard';
-import EmergencyAlert from './components/EmergencyAlert';
+import EmergencyDashboard from './components/EmergencyDashboard';
+import DonorDashboard from './components/DonorDashboard'; // Import
+
+function HomePage() {
+  return (
+    <>
+      <Hero />
+      <StatsSection />
+      <FeatureCards />
+    </>
+  );
+}
 
 function App() {
   return (
-    <AuthProvider>
-      <div className="App min-h-screen font-sans text-gray-800 bg-gray-50">
-        <Header />
-        <main>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<HomePage />} />
-            <Route path="/register-donor" element={<RegisterDonor />} />
-            <Route path="/login" element={<LoginForm />} />
-            <Route path="/register" element={<RegisterForm />} />
-            <Route path="/find-match" element={<FindMatch />} />
-            
-            {/* Protected Routes */}
-            <Route element={<PrivateRoute />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/emergency" element={<EmergencyAlert />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/emergency-dashboard" element={<EmergencyDashboard />} />
-              <Route path="/donor-dashboard" element={<DonorDashboard />} />
-              <Route path="/emergency-request" element={<EmergencyRequestForm />} />
-            </Route>
-
-            {/* Redirect any unknown paths to home */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </main>
-      </div>
-    </AuthProvider>
+    <div className="App min-h-screen font-sans text-gray-800 bg-gray-50">
+      <Header />
+      <main>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/register-donor" element={<RegisterDonor />} />
+          <Route path="/emergency-request" element={<EmergencyRequestForm />} />
+          <Route path="/find-match" element={<FindMatch />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/emergency-dashboard" element={<EmergencyDashboard />} />
+          {/* NEW ROUTE */}
+          <Route path="/donor-dashboard" element={<DonorDashboard />} />
+        </Routes>
+      </main>
+    </div>
   );
 }
 
