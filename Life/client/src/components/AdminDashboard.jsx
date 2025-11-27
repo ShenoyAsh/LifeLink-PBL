@@ -47,9 +47,14 @@ export default function AdminDashboard() {
         api.get('/donors'),
         api.get('/patients'),
       ]);
-      setDonors(donorRes.data);
-      setPatients(patientRes.data);
+      
+      // FIX: Access the nested .data property for donors
+      setDonors(donorRes.data.data); 
+      
+      // Patients endpoint returns the array directly, so this remains the same
+      setPatients(patientRes.data); 
     } catch (err) {
+      console.error(err); // Good to log the actual error for debugging
       toast.error('Failed to fetch data');
     } finally {
       setIsLoading(false);
