@@ -18,7 +18,7 @@ const generateToken = (id) => {
  * @route   POST /api/auth/register
  */
 const register = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, role } = req.body; // Added role to destructuring
 
   if (!name || !email || !password) {
     return res.status(400).json({ message: 'Please add all fields' });
@@ -41,8 +41,7 @@ const register = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      // Initialize required location with defaults to pass validation if needed, 
-      // though we made it optional in schema, good to be safe if accessed via geo queries
+      role: role || 'donor', // Default to donor if not specified
       location: { type: 'Point', coordinates: [0, 0], name: 'Unknown' }
     });
 
@@ -53,6 +52,7 @@ const register = async (req, res) => {
           _id: user._id,
           name: user.name,
           email: user.email,
+          role: user.role, // Return role
         },
       });
     } else {
@@ -83,6 +83,7 @@ const login = async (req, res) => {
           email: user.email,
           phone: user.phone,
           bloodType: user.bloodType,
+          role: user.role, // Return role
         },
       });
     } else {
@@ -146,6 +147,7 @@ const registerDonor = async (req, res) => {
       availability: availability ?? true,
       otp: otp, 
       otpExpires,
+      role: 'donor' // Explicitly set role
     });
     
     await newDonor.save();

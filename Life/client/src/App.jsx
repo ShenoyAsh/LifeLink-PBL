@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import FeatureCards from './components/FeatureCards';
@@ -14,6 +14,27 @@ import DonorDashboard from './components/DonorDashboard';
 // Import Auth Components
 import LoginForm from './components/auth/LoginForm';
 import RegisterForm from './components/auth/RegisterForm';
+
+import { useAuth } from './contexts/AuthContext';
+
+// Private Route Component
+const PrivateRoute = ({ children, adminOnly = false }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <div>Loading...</div>; 
+  }
+
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+
+  if (adminOnly && user.role !== 'admin') {
+    return <Navigate to="/donor-dashboard" />;
+  }
+
+  return children;
+};
 
 function HomePage() {
   return (
@@ -42,9 +63,32 @@ function App() {
           <Route path="/find-match" element={<FindMatch />} />
           
           {/* Protected/Admin Routes */}
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/emergency-dashboard" element={<EmergencyDashboard />} />
-          <Route path="/donor-dashboard" element={<DonorDashboard />} />
+          <Route 
+            path="/admin" 
+            element={
+              <PrivateRoute adminOnly={true}>
+                <AdminDashboard />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="/admin/emergency-dashboard" 
+            element={
+              <PrivateRoute adminOnly={true}>
+                <EmergencyDashboard />
+              </PrivateRoute>
+            } 
+          />
+          
+          {/* Protected Donor Routes */}
+          <Route 
+            path="/donor-dashboard" 
+            element={
+              <PrivateRoute>
+                <DonorDashboard />
+              </PrivateRoute>
+            } 
+          />
         </Routes>
       </main>
     </div>

@@ -6,7 +6,7 @@ const {
   recordDonation,
   addPoints
 } = require('../controllers/gamificationController');
-const { protect } = require('../middleware/auth');
+const { protect } = require('../middleware/authMiddleware'); // Updated path to authMiddleware
 
 // Public routes
 router.get('/leaderboard', getLeaderboard);
