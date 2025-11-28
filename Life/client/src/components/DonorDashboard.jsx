@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import { 
   Award, Droplet, Star, Shield, Zap, Activity, LayoutDashboard, 
   Calendar, Users, LogOut, Plus, AlertTriangle, X, Menu, Mail,
-  CheckCircle, History, AlertOctagon, MapPin, Clock, HeartPulse
+  CheckCircle, History, AlertOctagon, MapPin, Clock, HeartPulse,
+  Bell, BarChart2, ActivitySquare
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
@@ -31,6 +32,14 @@ const navItems = [
   { name: 'Emergency Alerts', icon: AlertOctagon, path: '/emergency' },
   { name: 'Find Donors', icon: Users, path: '/find-donors' },
   { name: 'Achievements', icon: Award, path: '/achievements' },
+  { name: 'Blood Bank Directory', icon: Droplet, path: '/blood-bank' },
+  { name: 'Prediction Tools', icon: Star, path: '/predictions' },
+  { name: 'Gamification', icon: Shield, path: '/gamification' },
+  { name: 'Stats', icon: HeartPulse, path: '/stats' },
+  { name: 'Register as Donor', icon: Plus, path: '/register-donor' },
+  { name: 'Register as Patient', icon: Plus, path: '/register-patient' },
+  { name: 'Emergency Request', icon: AlertTriangle, path: '/emergency-request' },
+  { name: 'Find Match', icon: MapPin, path: '/find-match' },
 ];
 
 // Quick Stats Cards
@@ -154,17 +163,17 @@ export default function DonorDashboard() {
         initial={{ x: -300 }}
         animate={{ x: sidebarOpen ? 0 : -300 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-30 lg:static lg:translate-x-0"
+        className="fixed inset-y-0 left-0 w-72 bg-gradient-to-b from-green-50 via-white to-green-100 shadow-2xl z-30 lg:static lg:translate-x-0"
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center justify-between px-6 py-5 border-b">
-            <div className="flex items-center">
-              <Droplet className="h-8 w-8 text-red-500" />
-              <span className="ml-2 text-xl font-bold text-gray-800">LifeLink</span>
+          <div className="flex items-center justify-between px-6 py-5 border-b border-green-200 bg-gradient-to-r from-green-100 to-white">
+            <div className="flex items-center gap-2 animate-pulse">
+              <Droplet className="h-8 w-8 text-primary-green" />
+              <span className="ml-2 text-2xl font-extrabold text-primary-green tracking-wide">LifeLink</span>
             </div>
             <button 
-              className="lg:hidden text-gray-500 hover:text-gray-700"
+              className="lg:hidden text-gray-500 hover:text-primary-green transition-colors"
               onClick={() => setSidebarOpen(false)}
             >
               <X className="h-6 w-6" />
@@ -187,19 +196,26 @@ export default function DonorDashboard() {
           )}
           
           {/* Navigation */}
-          <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-            {navItems.map((item) => (
-              <NavLink
+          <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto grid grid-cols-1 gap-2">
+            {navItems.map((item, idx) => (
+              <motion.div
                 key={item.name}
-                icon={item.icon}
-                label={item.name}
-                path={item.path}
-                isActive={activeTab === item.name.toLowerCase().replace(' ', '-')}
-                onClick={() => {
-                  setActiveTab(item.name.toLowerCase().replace(' ', '-'));
-                  setSidebarOpen(false);
-                }}
-              />
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.05 }}
+              >
+                <Link
+                  to={item.path}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl shadow-md bg-gradient-to-r from-green-50 to-white hover:from-primary-green hover:to-green-400 hover:text-white transition-all font-semibold text-gray-700 border border-green-100 ${activeTab === item.name.toLowerCase().replace(' ', '-') ? 'bg-primary-green text-white border-primary-green' : ''}`}
+                  onClick={() => {
+                    setActiveTab(item.name.toLowerCase().replace(' ', '-'));
+                    setSidebarOpen(false);
+                  }}
+                >
+                  <item.icon className="h-5 w-5 transition-transform group-hover:scale-110" />
+                  {item.name}
+                </Link>
+              </motion.div>
             ))}
           </nav>
           
@@ -219,36 +235,40 @@ export default function DonorDashboard() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col lg:pl-64">
         {/* Top Navigation */}
-        <header className="bg-white shadow-sm sticky top-0 z-10">
+        <header className="bg-gradient-to-r from-green-100 via-white to-green-200 shadow-lg sticky top-0 z-10">
           <div className="flex items-center justify-between px-6 py-4">
             <div className="flex items-center">
               <button 
-                className="lg:hidden text-gray-500 hover:text-gray-700 mr-4"
+                className="lg:hidden text-primary-green hover:text-green-700 mr-4 transition-colors"
                 onClick={toggleSidebar}
               >
                 <Menu className="h-6 w-6" />
               </button>
-              <h1 className="text-xl font-semibold text-gray-900">
-                {navItems.find(item => `/${activeTab}` === item.path)?.name || 'Dashboard'}
+              <h1 className="text-2xl font-extrabold text-primary-green tracking-wide animate-fade-in">
+                LifeLink Donor Dashboard
               </h1>
             </div>
-            
             <div className="flex items-center space-x-4">
-              <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full">
+              <motion.button className="p-2 text-primary-green hover:text-green-700 hover:bg-green-100 rounded-full transition-colors relative"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+              >
                 <Bell className="h-5 w-5" />
                 <span className="sr-only">Notifications</span>
                 {emergencyAlerts.length > 0 && (
-                  <span className="absolute top-3 right-3 h-2 w-2 bg-red-500 rounded-full"></span>
+                  <span className="absolute top-3 right-3 h-2 w-2 bg-red-500 rounded-full animate-pulse"></span>
                 )}
-              </button>
-              
+              </motion.button>
               <div className="relative">
-                <button className="flex items-center text-sm rounded-full focus:outline-none">
+                <motion.button className="flex items-center text-sm rounded-full focus:outline-none"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
                   <span className="sr-only">Open user menu</span>
-                  <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center text-red-600 font-medium">
+                  <div className="h-8 w-8 rounded-full bg-primary-green flex items-center justify-center text-white font-bold shadow-md">
                     {profile?.name ? profile.name.charAt(0).toUpperCase() : 'U'}
                   </div>
-                </button>
+                </motion.button>
               </div>
             </div>
           </div>

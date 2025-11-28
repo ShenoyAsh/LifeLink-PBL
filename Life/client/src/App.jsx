@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import FeatureCards from './components/FeatureCards';
@@ -10,31 +10,7 @@ import FindMatch from './components/FindMatch';
 import EmergencyRequestForm from './components/EmergencyRequestForm';
 import EmergencyDashboard from './components/EmergencyDashboard';
 import DonorDashboard from './components/DonorDashboard';
-
-// Import Auth Components
-import LoginForm from './components/auth/LoginForm';
-import RegisterForm from './components/auth/RegisterForm';
-
-import { useAuth } from './contexts/AuthContext';
-
-// Private Route Component
-const PrivateRoute = ({ children, adminOnly = false }) => {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return <div>Loading...</div>; 
-  }
-
-  if (!user) {
-    return <Navigate to="/login" />;
-  }
-
-  if (adminOnly && user.role !== 'admin') {
-    return <Navigate to="/donor-dashboard" />;
-  }
-
-  return children;
-};
+import { ClerkProvider, SignedIn, SignIn, SignUp } from '@clerk/clerk-react';
 
 function HomePage() {
   return (
@@ -48,50 +24,24 @@ function HomePage() {
 
 function App() {
   return (
-    <div className="App min-h-screen font-sans text-gray-800 bg-gray-50">
-      <Header />
-      <main>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          
-          {/* Auth Routes */}
-          <Route path="/login" element={<LoginForm />} />
-          <Route path="/signup" element={<RegisterForm />} />
-          
-          <Route path="/register-donor" element={<RegisterDonor />} />
-          <Route path="/emergency-request" element={<EmergencyRequestForm />} />
-          <Route path="/find-match" element={<FindMatch />} />
-          
-          {/* Protected/Admin Routes */}
-          <Route 
-            path="/admin" 
-            element={
-              <PrivateRoute adminOnly={true}>
-                <AdminDashboard />
-              </PrivateRoute>
-            } 
-          />
-          <Route 
-            path="/admin/emergency-dashboard" 
-            element={
-              <PrivateRoute adminOnly={true}>
-                <EmergencyDashboard />
-              </PrivateRoute>
-            } 
-          />
-          
-          {/* Protected Donor Routes */}
-          <Route 
-            path="/donor-dashboard" 
-            element={
-              <PrivateRoute>
-                <DonorDashboard />
-              </PrivateRoute>
-            } 
-          />
-        </Routes>
-      </main>
-    </div>
+    <ClerkProvider publishableKey={process.env.REACT_APP_CLERK_PUBLISHABLE_KEY}>
+      <div className="App min-h-screen font-sans text-gray-800 bg-gray-50">
+        <Header />
+        <main>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/login" element={<SignIn routing="path" path="/login" />} />
+            <Route path="/signup" element={<SignUp routing="path" path="/signup" />} />
+            <Route path="/register-donor" element={<RegisterDonor />} />
+            <Route path="/emergency-request" element={<EmergencyRequestForm />} />
+            <Route path="/find-match" element={<FindMatch />} />
+            <Route path="/admin" element={<SignedIn><AdminDashboard /></SignedIn>} />
+            <Route path="/admin/emergency-dashboard" element={<SignedIn><EmergencyDashboard /></SignedIn>} />
+            <Route path="/donor-dashboard" element={<SignedIn><DonorDashboard /></SignedIn>} />
+          </Routes>
+        </main>
+      </div>
+    </ClerkProvider>
   );
 }
 
