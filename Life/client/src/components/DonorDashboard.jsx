@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Award, Droplet, Star, Shield, Zap } from 'lucide-react';
+import { Search, Award, Droplet, Star, Shield, Zap, Activity, LayoutDashboard } from 'lucide-react';
 import { toast } from 'react-toastify';
+
+// Import the missing features
+import GamificationDashboard from './gamification/GamificationDashboard';
+import HealthTracker from './health/HealthTracker';
 
 // Badge Configuration (Visuals)
 const BADGE_ICONS = {
@@ -15,25 +19,22 @@ export default function DonorDashboard() {
   const [email, setEmail] = useState('');
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview'); // Added state for tabs
 
  const handleSearch = async (e) => {
     e.preventDefault();
     if (!email) return;
     
-    // Remove whitespace to prevent errors
     const cleanEmail = email.trim().toLowerCase();
 
     setLoading(true);
     try {
       const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
       
-      // 1. Make the request
       const res = await fetch(`${API_URL}/api/donors/profile/${encodeURIComponent(cleanEmail)}`);
       
-      // 2. Check Content-Type BEFORE parsing
       const contentType = res.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
-        // If we get HTML back, the route doesn't exist or server crashed
         const text = await res.text(); 
         console.error("Server returned non-JSON:", text);
         throw new Error("Server Error: API endpoint not found. Please check backend logs.");
@@ -58,7 +59,7 @@ export default function DonorDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 pt-24 pb-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         
         {/* 1. Login / Search Section */}
         {!profile && (
@@ -118,85 +119,120 @@ export default function DonorDashboard() {
                        • {profile.location}
                     </p>
                   </div>
-                  <div className="text-right mt-4 sm:mt-0">
-                    <p className="text-sm text-gray-500">Joined</p>
-                    <p className="font-medium">{new Date(profile.joinedAt).toLocaleDateString()}</p>
+                  
+                  {/* Tab Navigation */}
+                  <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg mt-4 sm:mt-0">
+                    {[
+                      { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+                      { id: 'achievements', label: 'Achievements', icon: Award },
+                      { id: 'health', label: 'Health Tracker', icon: Activity }
+                    ].map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                          activeTab === tab.id 
+                            ? 'bg-white text-primary-green shadow-sm' 
+                            : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                      >
+                        <tab.icon className="w-4 h-4 mr-2" />
+                        {tab.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <motion.div 
-                whileHover={{ y: -5 }}
-                className="bg-white p-6 rounded-2xl shadow-md border-l-4 border-blue-500"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-gray-500 font-medium">Total Points</h3>
-                  <Star className="text-blue-500 h-6 w-6" />
-                </div>
-                <p className="text-4xl font-bold text-gray-800">{profile.points}</p>
-                <p className="text-sm text-gray-400 mt-2">Earn +50 per donation</p>
-              </motion.div>
-
-              <motion.div 
-                 whileHover={{ y: -5 }}
-                 className="bg-white p-6 rounded-2xl shadow-md border-l-4 border-red-500"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-gray-500 font-medium">Donations</h3>
-                  <Droplet className="text-red-500 h-6 w-6" />
-                </div>
-                <p className="text-4xl font-bold text-gray-800">{profile.donationCount}</p>
-                <p className="text-sm text-gray-400 mt-2">Lives impacted</p>
-              </motion.div>
-
-              <motion.div 
-                 whileHover={{ y: -5 }}
-                 className="bg-white p-6 rounded-2xl shadow-md border-l-4 border-green-500"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-gray-500 font-medium">Badges</h3>
-                  <Award className="text-green-500 h-6 w-6" />
-                </div>
-                <p className="text-4xl font-bold text-gray-800">{profile.badges.length}</p>
-                <p className="text-sm text-gray-400 mt-2">Achievements unlocked</p>
-              </motion.div>
-            </div>
-
-            {/* Badge Case */}
-            <div className="bg-white rounded-2xl shadow-md p-8">
-              <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                <Award className="mr-2 text-primary-green" /> Trophy Case
-              </h3>
+            {/* TAB CONTENT */}
+            <div className="min-h-[400px]">
               
-              {profile.badges.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  {profile.badges.map((badgeName, i) => {
-                    const badgeInfo = BADGE_ICONS[badgeName] || BADGE_ICONS['LifeLink Hero'];
-                    const Icon = badgeInfo.icon;
-                    return (
-                      <div key={i} className={`${badgeInfo.bg} p-4 rounded-xl flex flex-col items-center text-center transition-transform hover:scale-105 cursor-pointer`}>
-                        <div className={`h-12 w-12 rounded-full bg-white flex items-center justify-center shadow-sm mb-3 ${badgeInfo.color}`}>
-                          <Icon className="h-6 w-6" />
-                        </div>
-                        <p className="font-bold text-gray-800 text-sm">{badgeName}</p>
-                        <p className="text-xs text-gray-500 mt-1">{badgeInfo.desc}</p>
+              {/* Overview Tab */}
+              {activeTab === 'overview' && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <motion.div 
+                      whileHover={{ y: -5 }}
+                      className="bg-white p-6 rounded-2xl shadow-md border-l-4 border-blue-500"
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-gray-500 font-medium">Total Points</h3>
+                        <Star className="text-blue-500 h-6 w-6" />
                       </div>
-                    )
-                  })}
+                      <p className="text-4xl font-bold text-gray-800">{profile.points}</p>
+                      <p className="text-sm text-gray-400 mt-2">Earn +50 per donation</p>
+                    </motion.div>
+
+                    <motion.div 
+                       whileHover={{ y: -5 }}
+                       className="bg-white p-6 rounded-2xl shadow-md border-l-4 border-red-500"
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-gray-500 font-medium">Donations</h3>
+                        <Droplet className="text-red-500 h-6 w-6" />
+                      </div>
+                      <p className="text-4xl font-bold text-gray-800">{profile.donationCount}</p>
+                      <p className="text-sm text-gray-400 mt-2">Lives impacted</p>
+                    </motion.div>
+
+                    <motion.div 
+                       whileHover={{ y: -5 }}
+                       className="bg-white p-6 rounded-2xl shadow-md border-l-4 border-green-500"
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-gray-500 font-medium">Badges</h3>
+                        <Award className="text-green-500 h-6 w-6" />
+                      </div>
+                      <p className="text-4xl font-bold text-gray-800">{profile.badges.length}</p>
+                      <p className="text-sm text-gray-400 mt-2">Achievements unlocked</p>
+                    </motion.div>
+                  </div>
+
+                  {/* Badge Case */}
+                  <div className="bg-white rounded-2xl shadow-md p-8">
+                    <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                      <Award className="mr-2 text-primary-green" /> Trophy Case
+                    </h3>
+                    
+                    {profile.badges.length > 0 ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        {profile.badges.map((badgeName, i) => {
+                          const badgeInfo = BADGE_ICONS[badgeName] || BADGE_ICONS['LifeLink Hero'];
+                          const Icon = badgeInfo.icon;
+                          return (
+                            <div key={i} className={`${badgeInfo.bg} p-4 rounded-xl flex flex-col items-center text-center transition-transform hover:scale-105 cursor-pointer`}>
+                              <div className={`h-12 w-12 rounded-full bg-white flex items-center justify-center shadow-sm mb-3 ${badgeInfo.color}`}>
+                                <Icon className="h-6 w-6" />
+                              </div>
+                              <p className="font-bold text-gray-800 text-sm">{badgeName}</p>
+                              <p className="text-xs text-gray-500 mt-1">{badgeInfo.desc}</p>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-center py-10 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+                        <Shield className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                        <p className="text-gray-500">No badges yet. Complete your first donation to unlock!</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              ) : (
-                <div className="text-center py-10 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-                  <Shield className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500">No badges yet. Complete your first donation to unlock!</p>
-                </div>
+              )}
+
+              {/* Advanced Features Tabs */}
+              {activeTab === 'achievements' && (
+                <GamificationDashboard />
+              )}
+
+              {activeTab === 'health' && (
+                <HealthTracker userId={profile._id} />
               )}
             </div>
             
             <div className="text-center pt-8">
-                <button onClick={() => setProfile(null)} className="text-gray-500 hover:text-gray-800 underline">
+                <button onClick={() => { setProfile(null); setActiveTab('overview'); }} className="text-gray-500 hover:text-gray-800 underline">
                     Search another email
                 </button>
             </div>

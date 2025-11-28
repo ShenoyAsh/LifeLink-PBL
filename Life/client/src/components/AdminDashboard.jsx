@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import api, { createAdminApi } from '../services/api';
-import { User, UserCheck, Stethoscope, Download, Upload, Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { User, Stethoscope, Download, Upload, Loader2, CheckCircle, XCircle, TrendingUp } from 'lucide-react';
 import BloodBankModal from './BloodBankModal';
 import { Link } from "react-router-dom";
+import PredictionDashboard from './predictions/PredictionDashboard'; // Import PredictionDashboard
 
-// A simple tabs component
+// Updated Tabs component to include Predictions
 const Tabs = ({ activeTab, setActiveTab }) => {
   const tabs = [
     { name: 'Donors', icon: User },
     { name: 'Patients', icon: Stethoscope },
+    { name: 'Predictions', icon: TrendingUp }, // Added Predictions Tab
     { name: 'Data & Tools', icon: Download },
   ];
   return (
@@ -41,6 +43,9 @@ export default function AdminDashboard() {
   const [isBankModalOpen, setIsBankModalOpen] = useState(false);
 
   const fetchData = async () => {
+    // Only fetch donor/patient data if not on the Predictions tab to save resources
+    if (activeTab === 'Predictions') return;
+
     setIsLoading(true);
     try {
       const [donorRes, patientRes] = await Promise.all([
@@ -48,13 +53,10 @@ export default function AdminDashboard() {
         api.get('/patients'),
       ]);
       
-      // FIX: Access the nested .data property for donors
       setDonors(donorRes.data.data); 
-      
-      // Patients endpoint returns the array directly, so this remains the same
       setPatients(patientRes.data); 
     } catch (err) {
-      console.error(err); // Good to log the actual error for debugging
+      console.error(err);
       toast.error('Failed to fetch data');
     } finally {
       setIsLoading(false);
@@ -63,17 +65,15 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [activeTab]); // Re-fetch when tab changes (except Predictions)
   
   const handleManualVerify = async (donorId) => {
     if (!window.confirm("Are you sure you want to manually verify this donor?")) return;
     
     try {
-        // This endpoint should be protected by JWT auth in a real app
-        // Using it unprotected for prototype
         await api.post(`/admin/verify-donor/${donorId}`);
         toast.success("Donor verified!");
-        fetchData(); // Refresh data
+        fetchData(); 
     } catch (err) {
         toast.error(err.response?.data?.message || "Verification failed");
     }
@@ -86,7 +86,7 @@ export default function AdminDashboard() {
     toast.info("Generating Excel export...");
     try {
         const res = await adminApi.get('/export/excel', {
-            responseType: 'blob', // Important
+            responseType: 'blob', 
         });
         const url = window.URL.createObjectURL(new Blob([res.data]));
         const link = document.createElement('a');
@@ -117,28 +117,26 @@ export default function AdminDashboard() {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
         toast.success(res.data.message);
-        fetchData(); // Refresh data
+        fetchData(); 
     } catch (err) {
         toast.error(err.response?.data?.message || "Import failed. Check API Key.");
     }
   };
 
-
   return (
     <div className="container mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-      <div className="flex items-center justify-between">
-  <h1 className="text-3xl font-bold tracking-tight text-gray-900">Admin Dashboard</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Admin Dashboard</h1>
 
-  <Link
-    to="/admin/emergency-dashboard"
-    className="text-sm font-medium text-gray-600 hover:text-primary-green"
-  >
-    Emergency Dashboard
-  </Link>
-</div>
+        <Link
+          to="/admin/emergency-dashboard"
+          className="text-sm font-medium text-gray-600 hover:text-primary-green flex items-center gap-1"
+        >
+           Emergency Dashboard <span aria-hidden="true">&rarr;</span>
+        </Link>
+      </div>
 
-<Tabs activeTab={activeTab} setActiveTab={setActiveTab} />
-
+      <Tabs activeTab={activeTab} setActiveTab={setActiveTab} />
       
       {isLoading && <Loader2 className="mt-8 h-8 w-8 animate-spin text-primary-green" />}
 
@@ -213,6 +211,11 @@ export default function AdminDashboard() {
                 </tbody>
              </table>
           </div>
+        )}
+
+        {/* Predictions Tab (New) */}
+        {activeTab === 'Predictions' && (
+            <PredictionDashboard />
         )}
 
         {/* Data & Tools Tab */}
