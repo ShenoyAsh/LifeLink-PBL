@@ -148,7 +148,6 @@ const AppointmentDetail = ({ isAdminView = false }) => {
   };
 
   const isEditable = appointment && (appointment.status === 'PENDING' || appointment.status === 'CONFIRMED');
-  const isUpcoming = appointment && isAfter(parseISO(appointment.date), new Date());
 
   if (loading || !appointment) {
     return (
@@ -159,10 +158,10 @@ const AppointmentDetail = ({ isAdminView = false }) => {
   }
 
   return (
-    <div className="bg-white">
+    <div className="bg-white p-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="md:flex md:items-center md:justify-between md:space-x-5">
+        <div className="md:flex md:items-center md:justify-between md:space-x-5 mb-6">
           <div className="flex items-center space-x-4">
             <Button
               variant="secondary"
@@ -183,7 +182,6 @@ const AppointmentDetail = ({ isAdminView = false }) => {
                   variant="danger"
                   onClick={handleDelete}
                   disabled={deleting || updatingStatus}
-                  loading={deleting}
                   className="inline-flex items-center"
                 >
                   <Trash2 className="h-4 w-4 mr-1" />
@@ -226,10 +224,112 @@ const AppointmentDetail = ({ isAdminView = false }) => {
         </div>
         
         {/* Status Banner */}
-        <div className={`mt-6 p-4 rounded-lg ${statusColors[appointment.status]} flex items-start`}>
-          <div className="flex-shrink-0">
+        <div className={`mb-8 p-4 rounded-lg ${statusColors[appointment.status]} flex items-center`}>
+          <div className="flex-shrink-0 mr-3">
             {statusIcons[appointment.status]}
           </div>
-       )
-       }
+          <div className="flex-1">
+            <p className="text-sm font-medium">
+              Status: <span className="font-bold">{statusLabels[appointment.status]}</span>
+            </p>
+            {appointment.status === 'PENDING' && (
+              <p className="mt-1 text-sm opacity-90">
+                This appointment is awaiting confirmation from the blood bank.
+              </p>
+            )}
+            {appointment.status === 'CONFIRMED' && (
+               <p className="mt-1 text-sm opacity-90">
+                 Your appointment is confirmed. Please arrive on time.
+               </p>
+            )}
+          </div>
+        </div>
 
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          {/* Time and Date */}
+          <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+              <Calendar className="h-5 w-5 text-blue-500 mr-2" />
+              Date & Time
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-gray-500">Date</p>
+                <p className="text-base font-medium text-gray-900">{formatDate(appointment.date)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Time</p>
+                <p className="text-base font-medium text-gray-900">
+                  {appointment.startTime} - {appointment.endTime}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Happening</p>
+                <p className="text-base font-medium text-blue-600">
+                  {getTimeUntilAppointment(appointment.date, appointment.startTime)}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Location Details */}
+          <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+              <MapPin className="h-5 w-5 text-red-500 mr-2" />
+              Location
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-gray-500">Blood Bank</p>
+                <p className="text-base font-medium text-gray-900">
+                  {appointment.bloodBank?.name || 'N/A'}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Address</p>
+                <p className="text-base font-medium text-gray-900">
+                  {appointment.bloodBank?.address || 'Address not available'}
+                </p>
+              </div>
+              {appointment.bloodBank?.phone && (
+                <div>
+                  <p className="text-sm text-gray-500">Contact</p>
+                  <p className="text-base font-medium text-gray-900 flex items-center">
+                    <Phone className="h-3 w-3 mr-1" />
+                    {appointment.bloodBank.phone}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Donation Information */}
+          <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 md:col-span-2">
+            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+              <Droplet className="h-5 w-5 text-red-600 mr-2" />
+              Donation Information
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-gray-500">Donation Type</p>
+                <p className="text-base font-medium text-gray-900">
+                  {donationTypeLabels[appointment.donationType] || appointment.donationType}
+                </p>
+              </div>
+              {appointment.notes && (
+                <div className="sm:col-span-2">
+                   <p className="text-sm text-gray-500">Notes</p>
+                   <p className="text-base text-gray-700 mt-1">{appointment.notes}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AppointmentDetail;

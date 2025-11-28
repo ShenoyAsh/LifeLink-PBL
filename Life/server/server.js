@@ -63,7 +63,7 @@ app.use((err, req, res, next) => {
 });
 
 // --- Start Server ---
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5002;
 httpServer.listen(PORT, () => {
   console.log(`🚀 LifeLink Server running on http://localhost:${PORT}`);
   console.log(`🔄 WebSocket server is running on ws://localhost:${PORT}`);
