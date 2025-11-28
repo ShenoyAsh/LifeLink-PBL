@@ -7,7 +7,7 @@ export default function Header() {
 
   return (
     <header className="absolute inset-x-0 top-0 z-50">
-      <nav className="flex items-center justify-between p-6 lg:px-8" aria-label="Global">
+      <nav className="flex items-center justify-between p-6 lg:px-8 max-w-7xl mx-auto w-full" aria-label="Global">
         <div className="flex lg:flex-1">
           <Link to="/" className="-m-1.5 p-1.5">
             <span className="font-cursive text-3xl font-bold text-primary-green">LifeLink</span>
@@ -27,22 +27,22 @@ export default function Header() {
           {user ? (
             <>
               {/* Features Links */}
-              <Link to="/gamification" className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary-green">
+              <Link to="/rewards" className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary-green whitespace-nowrap">
                 Rewards
               </Link>
-              <Link to="/predictions" className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary-green">
+              <Link to="/ai-insights" className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary-green whitespace-nowrap">
                 AI Insights
               </Link>
 
               {/* Show these only when logged in */}
-              <Link to="/donor-dashboard" className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary-green flex items-center gap-1">
+              <Link to="/my-impact" className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary-green whitespace-nowrap">
                 My Impact 
               </Link>
               
-              {/* Admin Link - Visible to all logged in users now */}
-              <Link to="/admin" className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary-green">
-                Admin
-              </Link>
+              {/* Admin Link - Only visible to admins */}
+                <Link to="/admin" className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary-green whitespace-nowrap">
+                  Admin
+                </Link>
 
               {/* User Profile & Logout Section */}
               <div className="flex items-center gap-4 ml-4 pl-4 border-l border-gray-200">

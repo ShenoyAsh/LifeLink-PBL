@@ -40,7 +40,7 @@ export const createAdminApi = () => {
   }
 
   return axios.create({
-    baseURL: isDevelopment ? 'http://localhost:5001/api' : '/api',
+    baseURL: isDevelopment ? 'http://127.0.0.1:5001/api' : '/api',
     headers: {
       'x-api-key': apiKey,
     },

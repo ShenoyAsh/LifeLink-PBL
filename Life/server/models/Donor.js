@@ -19,7 +19,12 @@ const donorSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true, lowercase: true },
   password: { type: String, select: false }, // Added password field
-  phone: { type: String, unique: true, sparse: true }, // Made optional & sparse (allows nulls)
+  phone: { 
+    type: String, 
+    unique: true, 
+    sparse: true,
+    default: undefined  // This ensures null values aren't stored
+  },
   bloodType: { 
     type: String, 
     enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
