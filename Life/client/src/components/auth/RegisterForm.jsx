@@ -7,7 +7,8 @@ export default function RegisterForm() {
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    role: 'donor'
   });
   const [error, setError] = useState('');
   const { register } = useAuth();
@@ -27,7 +28,8 @@ export default function RegisterForm() {
       await register({ 
         name: formData.name, 
         email: formData.email, 
-        password: formData.password 
+        password: formData.password,
+        role: formData.role
       });
       navigate('/');
     } catch (err) {
@@ -60,6 +62,24 @@ export default function RegisterForm() {
                 onChange={handleChange}
                 className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-green sm:text-sm sm:leading-6"
               />
+            </div>
+          </div>
+          <div>
+            <label htmlFor="role" className="block text-sm font-medium leading-6 text-gray-900">
+              Role
+            </label>
+            <div className="mt-2">
+              <select
+                id="role"
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-green sm:text-sm sm:leading-6"
+              >
+                <option value="donor">Donor</option>
+                <option value="patient">Patient</option>
+                <option value="admin">Admin</option>
+              </select>
             </div>
           </div>
 

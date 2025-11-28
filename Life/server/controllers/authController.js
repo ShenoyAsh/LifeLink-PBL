@@ -69,10 +69,15 @@ const register = async (req, res) => {
  * @route   POST /api/auth/login
  */
 const login = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, role } = req.body;
 
   try {
-    const user = await Donor.findOne({ email }).select('+password');
+    let user;
+    if (role) {
+      user = await Donor.findOne({ email, role }).select('+password');
+    } else {
+      user = await Donor.findOne({ email }).select('+password');
+    }
 
     if (user && (await bcrypt.compare(password, user.password))) {
       res.json({

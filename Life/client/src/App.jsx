@@ -20,6 +20,7 @@ import LoginForm from './components/auth/LoginForm';
 import RegisterForm from './components/auth/RegisterForm';
 
 import { useAuth } from './contexts/AuthContext';
+import Chat from './components/Chat';
 
 // Private Route Component
 const PrivateRoute = ({ children, adminOnly = false }) => {
@@ -57,60 +58,21 @@ function App() {
       <main>
         <Routes>
           <Route path="/" element={<HomePage />} />
-          
           {/* Auth Routes */}
           <Route path="/login" element={<LoginForm />} />
           <Route path="/signup" element={<RegisterForm />} />
-          
           <Route path="/register-donor" element={<RegisterDonor />} />
           <Route path="/emergency-request" element={<EmergencyRequestForm />} />
           <Route path="/find-match" element={<FindMatch />} />
-          
           {/* Feature Routes */}
-          <Route 
-            path="/gamification" 
-            element={
-              <PrivateRoute>
-                <GamificationDashboard />
-              </PrivateRoute>
-            } 
-          />
-          <Route 
-            path="/predictions" 
-            element={
-              <PrivateRoute>
-                <PredictionDashboard />
-              </PrivateRoute>
-            } 
-          />
-
+          <Route path="/gamification" element={<PrivateRoute><GamificationDashboard /></PrivateRoute>} />
+          <Route path="/predictions" element={<PrivateRoute><PredictionDashboard /></PrivateRoute>} />
+          <Route path="/chat" element={<PrivateRoute><Chat /></PrivateRoute>} />
           {/* Protected/Admin Routes */}
-          <Route 
-            path="/admin" 
-            element={
-              <PrivateRoute adminOnly={true}>
-                <AdminDashboard />
-              </PrivateRoute>
-            } 
-          />
-          <Route 
-            path="/admin/emergency-dashboard" 
-            element={
-              <PrivateRoute adminOnly={true}>
-                <EmergencyDashboard />
-              </PrivateRoute>
-            } 
-          />
-          
+          <Route path="/admin" element={<PrivateRoute adminOnly={true}><AdminDashboard /></PrivateRoute>} />
+          <Route path="/admin/emergency-dashboard" element={<PrivateRoute adminOnly={true}><EmergencyDashboard /></PrivateRoute>} />
           {/* Protected Donor Routes */}
-          <Route 
-            path="/donor-dashboard" 
-            element={
-              <PrivateRoute>
-                <DonorDashboard />
-              </PrivateRoute>
-            } 
-          />
+          <Route path="/donor-dashboard" element={<PrivateRoute><DonorDashboard /></PrivateRoute>} />
         </Routes>
       </main>
     </div>

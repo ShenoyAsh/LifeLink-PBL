@@ -19,6 +19,12 @@ const donorSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true, lowercase: true },
   password: { type: String, select: false }, // Added password field
+  role: {
+    type: String,
+    enum: ['donor', 'patient', 'admin'],
+    default: 'donor',
+    required: true
+  },
   phone: { 
     type: String, 
     unique: true, 

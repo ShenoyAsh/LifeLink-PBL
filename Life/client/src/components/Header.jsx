@@ -26,24 +26,26 @@ export default function Header() {
           {/* LOGIC START: Conditional rendering based on login status */}
           {user ? (
             <>
-              {/* Features Links */}
-              <Link to="/gamification" className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary-green">
-                Rewards
-              </Link>
-              <Link to="/predictions" className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary-green">
-                AI Insights
-              </Link>
-
-              {/* Show these only when logged in */}
-              <Link to="/donor-dashboard" className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary-green whitespace-nowrap">
-                My Impact 
-              </Link>
-              
+              {/* Features Links - Only for donor/patient */}
+              {(user.role === 'donor' || user.role === 'patient') && (
+                <>
+                  <Link to="/gamification" className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary-green">
+                    Rewards
+                  </Link>
+                  <Link to="/predictions" className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary-green">
+                    AI Insights
+                  </Link>
+                  <Link to="/donor-dashboard" className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary-green whitespace-nowrap">
+                    My Impact
+                  </Link>
+                </>
+              )}
               {/* Admin Link - Only visible to admins */}
+              {user.role === 'admin' && (
                 <Link to="/admin" className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary-green whitespace-nowrap">
                   Admin
                 </Link>
-
+              )}
               {/* User Profile & Logout Section */}
               <div className="flex items-center gap-4 ml-4 pl-4 border-l border-gray-200">
                 <span className="text-sm font-medium text-gray-500">Hi, {user.name}</span>

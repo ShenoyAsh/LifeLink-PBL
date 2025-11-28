@@ -6,6 +6,7 @@ const donorRoutes = require('./donorRoutes');
 const patientRoutes = require('./patientRoutes');
 const matchRoutes = require('./matchRoutes');
 const excelRoutes = require('./excelRoutes');
+const predictionRoutes = require('./predictionRoutes');
 const emergencyRequestRoutes = require('./emergencyRequestRoutes');
 const requestRoutes = require('./requestRoutes');
 
@@ -14,6 +15,7 @@ router.use(donorRoutes);
 router.use(patientRoutes);
 router.use(matchRoutes);
 router.use(excelRoutes);
+router.use(predictionRoutes);
 router.use(requestRoutes);
 router.use(emergencyRequestRoutes);
 
