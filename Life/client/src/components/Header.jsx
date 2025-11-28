@@ -27,15 +27,15 @@ export default function Header() {
           {user ? (
             <>
               {/* Features Links */}
-              <Link to="/rewards" className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary-green whitespace-nowrap">
+              <Link to="/gamification" className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary-green">
                 Rewards
               </Link>
-              <Link to="/ai-insights" className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary-green whitespace-nowrap">
+              <Link to="/predictions" className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary-green">
                 AI Insights
               </Link>
 
               {/* Show these only when logged in */}
-              <Link to="/my-impact" className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary-green whitespace-nowrap">
+              <Link to="/donor-dashboard" className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary-green whitespace-nowrap">
                 My Impact 
               </Link>
               
