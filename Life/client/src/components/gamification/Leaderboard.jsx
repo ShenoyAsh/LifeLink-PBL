@@ -3,6 +3,7 @@ import { Trophy, Award, Users, ArrowUp, ArrowDown, Minus } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
 import { Button } from '../common';
+import Loading from '../Loading';
 
 const Leaderboard = () => {
   const { user } = useAuth();

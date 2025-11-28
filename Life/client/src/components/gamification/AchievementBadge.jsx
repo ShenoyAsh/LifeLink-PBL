@@ -1,13 +1,15 @@
 import React from 'react';
-import { Trophy, Award, Heart, Star, CheckCircle } from 'lucide-react';
+import { Trophy, Award, Heart, Star, CheckCircle, Shield, Zap } from 'lucide-react';
 
-getIcon = (achievementType) => {
+const getIcon = (achievementType) => {
   const iconMap = {
     'FIRST_DONATION': <Trophy className="h-6 w-6 text-yellow-500" />,
     'REGULAR_DONOR': <Award className="h-6 w-6 text-blue-500" />,
     'LIFESAVER': <Heart className="h-6 w-6 text-red-500" />,
     'COMMUNITY_HERO': <Star className="h-6 w-6 text-purple-500" />,
     'PLATINUM_DONOR': <Award className="h-6 w-6 text-indigo-500" />,
+    'SHIELD': <Shield className="h-6 w-6 text-blue-400" />,
+    'ZAP': <Zap className="h-6 w-6 text-yellow-400" />,
   };
   
   return iconMap[achievementType] || <CheckCircle className="h-6 w-6 text-green-500" />;
