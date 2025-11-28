@@ -6,13 +6,25 @@ const rateLimit = require('express-rate-limit');
 const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs');
+const http = require('http');
 
 const allRoutes = require('./routes');
 const { connectDB } = require('./utils/db');
+const SocketService = require('./services/socketService');
 
 // --- Initialization ---
 const app = express();
+const httpServer = http.createServer(app);
 connectDB();
+
+// Initialize WebSocket server
+const socketService = new SocketService(httpServer);
+
+// Make socketService available in request object
+app.use((req, res, next) => {
+  req.socketService = socketService;
+  next();
+});
 
 // --- Data Directory Check ---
 // Ensure /data directory exists for Excel files
@@ -52,6 +64,7 @@ app.use((err, req, res, next) => {
 
 // --- Start Server ---
 const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(`🚀 LifeLink Server running on http://localhost:${PORT}`);
+  console.log(`🔄 WebSocket server is running on ws://localhost:${PORT}`);
 });

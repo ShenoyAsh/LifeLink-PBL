@@ -6,9 +6,11 @@ class SocketService {
     this.callbacks = {
       'newDonor': [],
       'emergencyAlert': [],
-      'donationRequest': [],
-      'donationStatusUpdate': []
+      'donationUpdate': [],
+      'donorLocationUpdate': [],
+      'newDonationRequest': []
     };
+    this.watchId = null;
   }
 
   connect(token) {
@@ -56,6 +58,67 @@ class SocketService {
     if (this.socket) {
       this.socket.emit(event, data);
     }
+  }
+
+  // Start tracking and broadcasting donor's location
+  startLocationTracking(donorId, requestId) {
+    if (this.watchId) {
+      this.stopLocationTracking();
+    }
+
+    if ('geolocation' in navigator) {
+      this.watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          const location = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy,
+            timestamp: position.timestamp
+          };
+          
+          // Emit location update to server
+          this.emit('updateLocation', {
+            donorId,
+            requestId,
+            location
+          });
+          
+          // Notify any local subscribers
+          this.callbacks['donorLocationUpdate'].forEach(callback => 
+            callback({ donorId, location })
+          );
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+        },
+        {
+          enableHighAccuracy: true,
+          maximumAge: 10000, // 10 seconds
+          timeout: 5000
+        }
+      );
+    } else {
+      console.warn('Geolocation is not supported by this browser');
+    }
+  }
+
+  // Stop tracking location
+  stopLocationTracking() {
+    if (this.watchId) {
+      navigator.geolocation.clearWatch(this.watchId);
+      this.watchId = null;
+    }
+  }
+
+  // Subscribe to donor location updates
+  onDonorLocationUpdate(callback) {
+    this.callbacks['donorLocationUpdate'].push(callback);
+    
+    // Return unsubscribe function
+    return () => {
+      this.callbacks['donorLocationUpdate'] = 
+        this.callbacks['donorLocationUpdate'].filter(cb => cb !== callback);
+    };
   }
 }
 
