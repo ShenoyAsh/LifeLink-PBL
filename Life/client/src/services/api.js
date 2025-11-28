@@ -1,10 +1,12 @@
 import axios from 'axios';
 
+// Determine if we are in a development environment (localhost or 127.0.0.1)
+const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
 // Create an Axios instance
 const api = axios.create({
-  baseURL: window.location.origin.includes('localhost:3000') 
-    ? 'http://localhost:5001/api' 
-    : '/api',  // For production, use relative URL
+  // Use port 5001 for development, otherwise relative path for production
+  baseURL: isDevelopment ? 'http://localhost:5001/api' : '/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -38,7 +40,7 @@ export const createAdminApi = () => {
   }
 
   return axios.create({
-    baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5001/api',
+    baseURL: isDevelopment ? 'http://localhost:5001/api' : '/api',
     headers: {
       'x-api-key': apiKey,
     },

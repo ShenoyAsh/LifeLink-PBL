@@ -26,17 +26,23 @@ export default function Header() {
           {/* LOGIC START: Conditional rendering based on login status */}
           {user ? (
             <>
+              {/* Features Links */}
+              <Link to="/gamification" className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary-green">
+                Rewards
+              </Link>
+              <Link to="/predictions" className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary-green">
+                AI Insights
+              </Link>
+
               {/* Show these only when logged in */}
               <Link to="/donor-dashboard" className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary-green flex items-center gap-1">
                 My Impact 
               </Link>
               
-              {/* Only show Admin link if user has admin role */}
-              {user.role === 'admin' && (
-                <Link to="/admin" className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary-green">
-                  Admin
-                </Link>
-              )}
+              {/* Admin Link - Visible to all logged in users now */}
+              <Link to="/admin" className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary-green">
+                Admin
+              </Link>
 
               {/* User Profile & Logout Section */}
               <div className="flex items-center gap-4 ml-4 pl-4 border-l border-gray-200">

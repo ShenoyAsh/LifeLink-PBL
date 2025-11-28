@@ -11,6 +11,10 @@ import EmergencyRequestForm from './components/EmergencyRequestForm';
 import EmergencyDashboard from './components/EmergencyDashboard';
 import DonorDashboard from './components/DonorDashboard';
 
+// Import Feature Components
+import GamificationDashboard from './components/gamification/GamificationDashboard';
+import PredictionDashboard from './components/predictions/PredictionDashboard';
+
 // Import Auth Components
 import LoginForm from './components/auth/LoginForm';
 import RegisterForm from './components/auth/RegisterForm';
@@ -62,6 +66,24 @@ function App() {
           <Route path="/emergency-request" element={<EmergencyRequestForm />} />
           <Route path="/find-match" element={<FindMatch />} />
           
+          {/* Feature Routes */}
+          <Route 
+            path="/gamification" 
+            element={
+              <PrivateRoute>
+                <GamificationDashboard />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="/predictions" 
+            element={
+              <PrivateRoute>
+                <PredictionDashboard />
+              </PrivateRoute>
+            } 
+          />
+
           {/* Protected/Admin Routes */}
           <Route 
             path="/admin" 

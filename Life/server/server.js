@@ -37,6 +37,7 @@ if (!fs.existsSync(dataDir)) {
 // --- Core Middleware ---
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true
 }));
 app.use(helmet());
 app.use(express.json());
@@ -63,7 +64,8 @@ app.use((err, req, res, next) => {
 });
 
 // --- Start Server ---
-const PORT = process.env.PORT || 5002;
+// UPDATED: Defaults to 5001 to match client configuration
+const PORT = process.env.PORT || 5001;
 httpServer.listen(PORT, () => {
   console.log(`🚀 LifeLink Server running on http://localhost:${PORT}`);
   console.log(`🔄 WebSocket server is running on ws://localhost:${PORT}`);
