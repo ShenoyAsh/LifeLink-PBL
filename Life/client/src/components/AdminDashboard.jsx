@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import api, { createAdminApi } from '../services/api';
 import { User, Stethoscope, Download, Upload, Loader2, CheckCircle, XCircle, TrendingUp } from 'lucide-react';
@@ -42,7 +42,7 @@ export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [isBankModalOpen, setIsBankModalOpen] = useState(false);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     // Only fetch donor/patient data if not on the Predictions tab to save resources
     if (activeTab === 'Predictions') return;
 
@@ -61,11 +61,11 @@ export default function AdminDashboard() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [activeTab]);
 
   useEffect(() => {
     fetchData();
-  }, [activeTab]); // Re-fetch when tab changes (except Predictions)
+  }, [fetchData]); // Re-fetch when tab changes (except Predictions)
   
   const handleManualVerify = async (donorId) => {
     if (!window.confirm("Are you sure you want to manually verify this donor?")) return;

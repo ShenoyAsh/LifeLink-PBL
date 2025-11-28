@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Trophy, Award, Zap, BarChart2, Clock, Heart, Users, ArrowUp, Gift } from 'lucide-react';
+import { Trophy, Award, Zap, BarChart2, Heart, ArrowUp, Gift } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
 import Leaderboard from './Leaderboard';
@@ -19,7 +19,8 @@ const GamificationDashboard = () => {
       try {
         setLoading(true);
         const response = await api.get('/api/gamification/me');
-        setUserStats(response.data.data);
+        const stats = response.data.data;
+        setUserStats(stats);
         
         // Simulate recent activity (replace with actual API call)
         setRecentActivity([
@@ -29,6 +30,7 @@ const GamificationDashboard = () => {
         ]);
         
         // Simulate all achievements (replace with actual API call)
+        // Use local 'stats' variable to calculate earned status
         setAllAchievements([
           { 
             type: 'FIRST_DONATION', 
@@ -41,28 +43,28 @@ const GamificationDashboard = () => {
             type: 'REGULAR_DONOR', 
             title: 'Regular Donor', 
             description: 'Donate blood 5 times',
-            earned: userStats?.totalDonations >= 5,
-            earnedAt: userStats?.totalDonations >= 5 ? new Date(Date.now() - 1296000000) : null
+            earned: stats?.totalDonations >= 5,
+            earnedAt: stats?.totalDonations >= 5 ? new Date(Date.now() - 1296000000) : null
           },
           { 
             type: 'LIFESAVER', 
             title: 'Lifesaver', 
             description: 'Donate blood 10 times',
-            earned: userStats?.totalDonations >= 10,
-            earnedAt: userStats?.totalDonations >= 10 ? new Date(Date.now() - 604800000) : null
+            earned: stats?.totalDonations >= 10,
+            earnedAt: stats?.totalDonations >= 10 ? new Date(Date.now() - 604800000) : null
           },
           { 
             type: 'COMMUNITY_HERO', 
             title: 'Community Hero', 
             description: 'Donate blood 25 times',
-            earned: userStats?.totalDonations >= 25,
+            earned: stats?.totalDonations >= 25,
             earnedAt: null
           },
           { 
             type: 'PLATINUM_DONOR', 
             title: 'Platinum Donor', 
             description: 'Donate blood 50 times',
-            earned: userStats?.totalDonations >= 50,
+            earned: stats?.totalDonations >= 50,
             earnedAt: null
           },
         ]);
