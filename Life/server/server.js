@@ -11,6 +11,7 @@ const http = require('http');
 const allRoutes = require('./routes');
 const { connectDB } = require('./utils/db');
 const SocketService = require('./services/socketService');
+const { errorHandler, notFound } = require('./utils/errorResponse');
 
 // --- Initialization ---
 const app = express();
@@ -60,11 +61,11 @@ app.use('/static', express.static(path.join(__dirname, 'data')));
 // --- API Routes ---
 app.use('/api', allRoutes);
 
+// --- 404 Handler ---
+app.all('*', notFound);
+
 // --- Global Error Handler ---
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send({ message: 'Something broke!', error: err.message });
-});
+app.use(errorHandler);
 
 // --- Start Server ---
 // UPDATED: Defaults to 5001 to match client configuration
